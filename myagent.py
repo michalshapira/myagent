@@ -130,7 +130,7 @@ class AwesomeNegotiator(SAONegotiator):
 
         # Find the current aspiration level
         threshold = aspiration_function(
-            self.relative_time, 1.0, self.ufun.reserved_value, self.e)
+            self.relative_time, 1.0, self.ufun.reserved_value, 50)
 
         self.step += 1
 
@@ -143,19 +143,7 @@ class AwesomeNegotiator(SAONegotiator):
 
         Returns: The counter offer as Outcome.
         """
-        # The opponent's ufun can be accessed using self.opponent_ufun, which is not used yet.
-        outcomes = self.pareto_outcomes if self.pareto_outcomes else self.rational_outcomes
-        # print("pareto outcomes:---------------------------")
-        # print(self.pareto_outcomes)
-
-        # print("rational outcomes--------------------------")
-        # print(self.rational_outcomes)
-
-        # print("outcomes is pareto---------------------------------")
-        # print(outcomes == self.pareto_outcomes)
-
-        # print("options--------------------")
-        # print(list(self.ufun.outcome_space.enumerate_or_sample()))
+        outcomes = self.rational_outcomes
 
         if not outcomes:
             return self.ufun.best()
@@ -174,8 +162,17 @@ class AwesomeNegotiator(SAONegotiator):
                 opponent_ufun_values, self.opponent_rv)
             offers = sorted(
                 sorted_outcomes_for_opponent_best[bot_idx:top_idx + 1], key=lambda o: float(self.ufun(o)), reverse=True)
+
             return offers[0] if offers else outcomes[0]
 
+        # pareto_offers = [o for o in offers if o in self.pareto_outcomes]
+        # if pareto_offers:
+        #     return pareto_offers[0]
+        # elif offers:
+        #     return offers[0]
+        # return outcomes[0]
+
+        # TODO: dynamically change e
         asp_level = aspiration_function(
             state.relative_time, 1.0, 0.0, self.e)
 
@@ -186,7 +183,7 @@ class AwesomeNegotiator(SAONegotiator):
                 asp_level *= 0.98
             else:
                 # firm
-                asp_level *= 1.01
+                asp_level *= 1.05
 
         # ufun_values = [float(self.ufun(o)) for o in outcomes]
         # bot_idx = find_nearest_value_idx(ufun_values, asp_level + 0.02)
@@ -217,10 +214,8 @@ class AwesomeNegotiator(SAONegotiator):
 
         offer = state.current_offer
 
-        if (
-            self.opponent_ufun(offer) < self.opponent_rv
-            and self.opponent_ufun(offer) >= 0.01
-        ):
+        # TODO: add curve fitting
+        if (self.opponent_ufun(offer) < self.opponent_rv):
             self.opponent_rv = float(self.opponent_ufun(offer))
 
         # update rational_outcomes by removing the outcomes that are below the reservation value of the opponent
