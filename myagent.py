@@ -188,6 +188,12 @@ class AwesomeNegotiator(SAONegotiator):
                 # firm
                 asp_level *= 1.01
 
+        # ufun_values = [float(self.ufun(o)) for o in outcomes]
+        # bot_idx = find_nearest_value_idx(ufun_values, asp_level + 0.02)
+        # top_idx = find_nearest_value_idx(ufun_values, asp_level - 0.02)
+        # # offers = outcomes[bot_idx:top_idx+1]
+        # return outcomes[bot_idx]
+
         for outcome in outcomes:
             if self.ufun(outcome) >= asp_level:
                 self.previous_offer = outcome
